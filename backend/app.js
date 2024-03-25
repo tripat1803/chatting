@@ -13,12 +13,11 @@ io.on('connection', (socket) => {
     console.log('User connected to', socket.id);
     socket.on("new-group", (data) => {
         data.participants.forEach((item) => {
-            if(item.userId === data.owner) return;
+            if(item.userId === data.owner._id) return;
             io.emit(`${item.userId}-new-group`, data);
         });
     });
     socket.on("new-message", (data) => {
-        console.log(data);
         let newData = {
             messageId: data.messageId,
             groupId: data.groupId,

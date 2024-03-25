@@ -37,11 +37,13 @@ exports.createGroup = async (req, res) => {
                 providerId: user.providerId,
                 owned: true
             },
-            participants: participants.map((item) => {
+            participants: [...participants.map((item) => {
                 return {
                     userId: item.userId,
                 }
-            }),
+            }), {
+                userId: owner
+            }],
             lastMessage: []
         }
 

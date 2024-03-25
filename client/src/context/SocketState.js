@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 import { socket } from '../utils/socket';
-import { AuthContext } from './AuthState';
 
 export const SocketContext = createContext();
 export default function SocketState({ children }) {
@@ -13,12 +12,12 @@ export default function SocketState({ children }) {
         });
         socket.on("disconnect", () => {
             setIsConnected(false);
+            console.log("Disconnected from the server");
         });
 
         return () => {
             socket.off("connect");
             socket.off("disconnect");
-            setIsConnected(false);
         }
     }, []);
 

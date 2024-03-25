@@ -15,9 +15,8 @@ export default function GroupState({ children }) {
     const [newMessages, setNewMessages] = useState({});
 
     useEffect(() => {
-        if (!isConnected) return;
         socket.on(`${user.userId}-new-group`, (data) => {
-            setNewGroup(data);
+            console.log(data);
         });
         socket.on(`${user.userId}-new-message`, (data) => {
             setNewMessage(data);
@@ -27,7 +26,7 @@ export default function GroupState({ children }) {
             socket.off("new-group");
             socket.off("new-message");
         }
-    }, [isConnected]);
+    }, [user]);
 
     useEffect(() => {
         if (!newGroup) return;
