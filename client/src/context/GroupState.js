@@ -16,7 +16,7 @@ export default function GroupState({ children }) {
 
     useEffect(() => {
         socket.on(`${user.userId}-new-group`, (data) => {
-            console.log(data);
+            setNewGroup(data);
         });
         socket.on(`${user.userId}-new-message`, (data) => {
             setNewMessage(data);
@@ -26,7 +26,7 @@ export default function GroupState({ children }) {
             socket.off("new-group");
             socket.off("new-message");
         }
-    }, [user]);
+    }, [user, isConnected]);
 
     useEffect(() => {
         if (!newGroup) return;
