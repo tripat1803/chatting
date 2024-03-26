@@ -1,6 +1,6 @@
 const cors = require('cors');
 const express = require('express');
-const { redisPub, redisSubGroup, redisSubMessage } = require("./config/redis.js")();
+const { redisPub, redisSub } = require("./config/redis.js")();
 
 const app = express();
 const server = require("http").Server(app);
@@ -18,34 +18,33 @@ io.on('connection', (socket) => {
         redisPub.publish("NEW-MESSAGE", JSON.stringify(data));
     });
 });
-redisSubMessage.on("message", (channel, message) => {
+redisSub.on("message", (channel, message) => {
     let data = JSON.parse(message);
-    let newData = {
-        messageId: data.messageId,
-        groupId: data.groupId,
-        message: data.message,
-        messageType: data.messageType,
-        replyTo: data.replyTo,
-        createdAt: data.createdAt,
-        user: {
-            userId: data.user.userId,
-            firstname: data.user.firstname,
-            lastname: data.user.lastname,
-            providerId: data.user.providerId
+    if(channel === "NEW-MESSAGE") {
+        let newData = {
+            messageId: data.messageId,
+            groupId: data.groupId,
+            message: data.message,
+            messageType: data.messageType,
+            replyTo: data.replyTo,
+            createdAt: data.createdAt,
+            user: {
+                userId: data.user.userId,
+                firstname: data.user.firstname,
+                lastname: data.user.lastname,
+                providerId: data.user.providerId
+            }
         }
+        data.participants.forEach((item) => {
+            if (item.userId === data.user.userId) return;
+            io.emit(`${item.userId}-new-message`, newData);
+        });
+    } else if(channel === "NEW-GROUP") {
+        data.participants.forEach((item) => {
+            if (item.userId === data.owner._id) return;
+            io.emit(`${item.userId}-new-group`, data);
+        });
     }
-    data.participants.forEach((item) => {
-        if (item.userId === data.user.userId) return;
-        io.emit(`${item.userId}-new-message`, newData);
-    });
-});
-
-redisSubGroup.on("message", (channel, message) => {
-    let data = JSON.parse(message);
-    data.participants.forEach((item) => {
-        if (item.userId === data.owner._id) return;
-        io.emit(`${item.userId}-new-group`, data);
-    });
 });
 
 app.get('/', (req, res) => {

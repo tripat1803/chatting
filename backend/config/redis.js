@@ -10,15 +10,14 @@ const connectToRedis = () => {
             port: process.env.REDIS_PORT
         }
         const redisPub = new Redis(config);
-        const redisSubGroup = new Redis(config);
-        const redisSubMessage = new Redis(config);
+        const redisSub = new Redis(config);
     
-        redisSubGroup.subscribe("NEW-GROUP");
-        redisSubMessage.subscribe("NEW-MESSAGE");
+        redisSub.subscribe("NEW-GROUP");
+        redisSub.subscribe("NEW-MESSAGE");
 
         console.log("Conncted to Redis");
     
-        return { redisPub, redisSubGroup, redisSubMessage };
+        return { redisPub, redisSub };
     } catch (err){
         console.log(err);
     }
