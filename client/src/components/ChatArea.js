@@ -14,11 +14,10 @@ export default function ChatArea({ group }) {
     const [message, setMessage] = useState('');
     const [buttonLoader, setButtonLoader] = useState(false);
     const [loader, setLoader] = useState(false);
-    let scrollRef = useRef();
     let chatDataRef = useRef();
 
     const scrollToBottom = () => {
-        scrollRef.current.scrollTo(0, chatDataRef.current.scrollHeight);
+        chatDataRef.current.scrollIntoView();
     }
 
     const handleSend = () => {
@@ -34,7 +33,6 @@ export default function ChatArea({ group }) {
                 ...res.data.message,
                 participants: group.participants
             });
-            scrollToBottom();
             setMessages([res.data.message, ...messages]);
             setMessage('');
             setButtonLoader(false);
@@ -44,6 +42,7 @@ export default function ChatArea({ group }) {
     }
 
     const fetchMessages = () => {
+        if(!group || !group.groupId) return;
         setLoader(true);
         authAxios.get(`/api/message/${group.groupId}`).then((res) => {
             setMessages(res.data.messages);
@@ -55,16 +54,21 @@ export default function ChatArea({ group }) {
     }
 
     useEffect(() => {
+        setMessages([]);
         fetchMessages();
     }, [group]);
 
     useEffect(() => {
+        if (loader) return;
         if (!newMessages) return;
         if (newMessages[group.groupId]) {
             setMessages((prev) => [newMessages[group.groupId][newMessages[group.groupId].length - 1], ...prev]);
-            scrollToBottom();
         }
-    }, [newMessages]);
+    }, [loader, newMessages]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     return (
         <div className='flex flex-col flex-1 h-full'>
@@ -77,18 +81,19 @@ export default function ChatArea({ group }) {
                     {/* <p className='text-[#8696a0] text-xs'>hello</p> */}
                 </div>
             </div>
-            <div ref={scrollRef} className='flex-1 overflow-y-scroll bg-[#0b141a] flex flex-col'>
-                <div className='w-full flex-1 flex items-end'>
-                    <div ref={chatDataRef} className='py-2 flex-1 flex flex-col justify-end'>
+            <div className='flex-1 overflow-y-scroll remove-scroll bg-[#0b141a] flex flex-col'>
+                <div className='w-full flex-1 flex flex-col justify-end'>
+                    <div className='py-2 flex-1 flex flex-col justify-end'>
                         {
                             (messages && messages.length !== 0) && messages.map((data, index) => {
                                 let msg = messages[messages.length - index - 1];
                                 return (
-                                    <MessageCard key={msg.messageId} user={msg.user} message={msg.message} owned={msg.user.userId === user.userId} previousOwned={(index !== 0) && (messages[messages.length - 1 -index].user.userId === messages[messages.length - index].user.userId)} />
+                                    <MessageCard key={msg.messageId} user={msg.user} message={msg.message} owned={msg.user.userId === user.userId} previousOwned={(index !== 0) && (messages[messages.length - 1 - index].user.userId === messages[messages.length - index].user.userId)} />
                                 )
                             })
                         }
                     </div>
+                    <div className='w-full' ref={chatDataRef}></div>
                 </div>
             </div>
             <div className='bg-[#202c33] py-3 px-4 flex items-center gap-4 h-[max-content]'>
@@ -98,7 +103,7 @@ export default function ChatArea({ group }) {
                     }
                 }} value={message} onChange={(e) => {
                     setMessage(e.target.value);
-                }} type='text' placeholder='Type a message' className='outline-none border-none bg-[#2a3942] flex-1 py-1.5 px-3 placeholder:text-[#8696a0] text-[#8696a0] rounded-md' />
+                }} type='text' placeholder='Type a message' autoFocus className='outline-none border-none bg-[#2a3942] flex-1 py-1.5 px-3 placeholder:text-[#8696a0] text-[#8696a0] rounded-md' />
                 <IoSend onClick={handleSend} size={26} className='text-[#8696a0]' />
             </div>
         </div>
