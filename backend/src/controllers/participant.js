@@ -14,7 +14,7 @@ exports.addParticipant = async (req, res) => {
         await Participant.insertMany(participants.map((item) => {
             return {
                 userId: item._id,
-                groupId: data._id
+                groupId: data.groupId
             }
         }));
 
@@ -28,15 +28,19 @@ exports.removeParticipant = async (req, res) => {
     try {
         let { groupId, userId } = req.body;
 
-        if(!userId || (req.user._id == userId)) {
-            let data = await Participant.findOne({ groupId, userId: req.user._id });
-    
+        let data = await Participant.findOne({ groupId, userId: req.user._id });
+
+        if(!userId || (req.user._id !== userId)) {
             if (!data || !data.isAdmin) {
                 return res.status(401).json({ message: "Unauthorized" });
             }
         }
 
-        await Participant.deleteOne({ groupId, userId: (!userId || req.user._id) ? req.user._id : userId });
+        if((req.user._id === userId) && data.isOwner) {
+            return res.status(401).json({ message: "You can't remove yourself from the group" });
+        }
+
+        await Participant.deleteOne({ groupId, userId: (userId || req.user._id) });
 
         res.status(201).json({ message: "Participants added successfully" });
     } catch (err) {
